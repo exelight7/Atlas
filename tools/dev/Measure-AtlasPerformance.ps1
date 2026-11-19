@@ -17,7 +17,8 @@
                   use, and processor performance (% of base clock) and frequency
       processes   process, thread and handle counts, the largest processes by name
       services    running, automatic and delayed services, and the running list
-      tasks       enabled and ready scheduled tasks, and the enabled list
+      tasks       enabled and ready scheduled tasks, the enabled list, and the tasks that
+                  ran in the last 24 hours
       startup     Run keys and Startup folders with their Task Manager enabled state
       boot        the last boot-performance events (Event 100)
       timer       the current, minimum and maximum system timer resolution
@@ -201,11 +202,21 @@ function Get-ServiceSummary {
 }
 
 function Get-TaskSummary {
-    <# Task objects need TaskPath, TaskName and State, as Get-ScheduledTask returns them. #>
-    param([Parameter(Mandatory = $true)][object[]]$Task)
+    <# Task objects need TaskPath, TaskName and State, as Get-ScheduledTask returns them.
+       LastRun maps a full task path to its last run time; a task whose last run falls in
+       the 24 hours before Now counts as run recently. #>
+    param(
+        [Parameter(Mandatory = $true)][object[]]$Task,
+        [System.Collections.IDictionary]$LastRun = @{},
+        [datetime]$Now = (Get-Date)
+    )
 
     $enabled = @($Task | Where-Object { [string]$_.State -ne 'Disabled' })
     $microsoft = @($enabled | Where-Object { $_.TaskPath -like '\Microsoft\*' })
+    $since = $Now.AddHours(-24)
+    $recent = @($Task | ForEach-Object { '{0}{1}' -f $_.TaskPath, $_.TaskName } | Where-Object {
+            $LastRun.Contains($_) -and $null -ne $LastRun[$_] -and [datetime]$LastRun[$_] -gt $since -and [datetime]$LastRun[$_] -le $Now
+        } | Sort-Object)
 
     return [ordered]@{
         total = $Task.Count
@@ -215,6 +226,8 @@ function Get-TaskSummary {
         enabledMicrosoft = $microsoft.Count
         enabledOther = $enabled.Count - $microsoft.Count
         enabledList = @($enabled | ForEach-Object { '{0}{1}' -f $_.TaskPath, $_.TaskName } | Sort-Object)
+        ranLast24h = $recent.Count
+        ranLast24hList = $recent
     }
 }
 
@@ -651,7 +664,18 @@ $document.processes = Invoke-MeasureSection -Name 'processes' -Errors $errors -C
 $document.services = Invoke-MeasureSection -Name 'services' -Errors $errors -Collector {
     Get-ServiceSummary -Service @(Get-CimInstance -ClassName Win32_Service)
 }
-$document.tasks = Invoke-MeasureSection -Name 'tasks' -Errors $errors -Collector { Get-TaskSummary -Task @(Get-ScheduledTask) }
+$document.tasks = Invoke-MeasureSection -Name 'tasks' -Errors $errors -Collector {
+    $all = @(Get-ScheduledTask)
+    $lastRun = @{}
+    foreach ($item in $all) {
+        $info = $item | Get-ScheduledTaskInfo -ErrorAction SilentlyContinue
+        # Never-run tasks report a placeholder date in 1999.
+        if ($info -and $info.LastRunTime -and $info.LastRunTime.Year -gt 2000) {
+            $lastRun['{0}{1}' -f $item.TaskPath, $item.TaskName] = $info.LastRunTime
+        }
+    }
+    Get-TaskSummary -Task $all -LastRun $lastRun
+}
 $document.startup = Invoke-MeasureSection -Name 'startup' -Errors $errors -Collector { Get-StartupEntry }
 $document.boot = Invoke-MeasureSection -Name 'boot' -Errors $errors -Collector { Get-BootPerformance -Count $run.BootEventCount }
 $document.timer = Invoke-MeasureSection -Name 'timer' -Errors $errors -Collector { Get-TimerResolution }

@@ -134,6 +134,25 @@ Describe 'Measure-AtlasPerformance pure helpers' {
         $summary.enabledMicrosoft | Should -Be 1
         $summary.enabledOther | Should -Be 1
         $summary.enabledList | Should -Be @('\Microsoft\Windows\X\One', '\Vendor')
+        $summary.ranLast24h | Should -Be 0
+    }
+
+    It 'counts the tasks that ran in the 24 hours before now' {
+        $task = @(
+            [pscustomobject]@{ TaskPath = '\A\'; TaskName = 'Recent'; State = 'Ready' }
+            [pscustomobject]@{ TaskPath = '\A\'; TaskName = 'Old'; State = 'Ready' }
+            [pscustomobject]@{ TaskPath = '\A\'; TaskName = 'Never'; State = 'Ready' }
+            [pscustomobject]@{ TaskPath = '\B\'; TaskName = 'Off'; State = 'Disabled' }
+        )
+        $now = [datetime]'2026-11-19T18:00:00'
+        $lastRun = @{
+            '\A\Recent' = $now.AddHours(-2)
+            '\A\Old' = $now.AddHours(-30)
+            '\B\Off' = $now.AddHours(-1)
+        }
+        $summary = Get-TaskSummary -Task $task -LastRun $lastRun -Now $now
+        $summary.ranLast24h | Should -Be 2
+        $summary.ranLast24hList | Should -Be @('\A\Recent', '\B\Off')
     }
 
     It 'records a failing section and returns null' {
@@ -212,6 +231,7 @@ Describe 'Measure-AtlasPerformance document' {
         $document.power.processor.maxStateAc | Should -BeGreaterThan 0
         $document.power.processor.eppAc | Should -BeGreaterOrEqual 0
         $document.memory.cpuPerformancePercent | Should -BeGreaterThan 0
+        $document.tasks.ranLast24h | Should -BeGreaterThan 0
         $document.errors.PSObject.Properties.Name | Should -Not -Contain 'gpuScheduling'
         @($document.gpuScheduling.adapters).Count | Should -BeGreaterThan 0
     }
