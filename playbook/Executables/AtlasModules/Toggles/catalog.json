@@ -2,6 +2,48 @@
   "schemaVersion": 1,
   "toggles": [
     {
+      "name": "LiteTasks",
+      "group": "Advanced",
+      "description": "exelight7 Lite scheduled tasks: 29 Microsoft tasks that Atlas leaves on, for telemetry, diagnostics and reports (including the WinSAT benchmark and crash-report upload), features a gaming PC does not use (Work Folders, Family Safety, AD RMS, Maps, printing, media sharing, Xbox cloud saves) and the cloud backup of the app list. Security, update, storage maintenance (TRIM), System Restore, time, language, DirectX and search tasks are not changed.",
+      "elevation": "TrustedInstaller",
+      "noStateRecord": false,
+      "menu": false,
+      "launcher": null,
+      "warning": "While disabled: crash reports are not sent to Microsoft (local reports stay), Task Manager shows no startup impact, recommended troubleshooting does not run automatically, Windows Backup does not save the app list and settings to your account, and Work Folders, Microsoft Family, AD RMS, Maps alerts, printer cleanup, Windows Media sharing and Xbox cloud saves do not run.",
+      "states": [
+        {
+          "name": "Disable",
+          "stateValue": 0,
+          "launcher": "6. Advanced Configuration\\Lite Tasks\\Disable Lite Tasks.cmd",
+          "reboot": "None",
+          "work": {
+            "registry": 0,
+            "services": 0,
+            "scheduledTasks": 29,
+            "machineAction": null,
+            "userAction": null,
+            "action": null,
+            "user": false
+          }
+        },
+        {
+          "name": "Enable",
+          "stateValue": 1,
+          "launcher": "6. Advanced Configuration\\Lite Tasks\\Enable Lite Tasks (default).cmd",
+          "reboot": "None",
+          "work": {
+            "registry": 0,
+            "services": 0,
+            "scheduledTasks": 29,
+            "machineAction": null,
+            "userAction": null,
+            "action": null,
+            "user": false
+          }
+        }
+      ]
+    },
+    {
       "name": "MicrosoftStore",
       "group": "Advanced",
       "description": "Removes Microsoft Store for all users or restores it for your account, downloading its package from Microsoft when needed.",
