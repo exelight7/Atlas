@@ -194,6 +194,19 @@ drift check runs the installed health check and is the result to rely on; the ot
 sections add machine context, listed in the script header. A section that fails records
 why, and the report still completes.
 
+### Measuring performance before and after a change
+
+`tools/dev/Measure-AtlasPerformance.ps1` reads idle memory, commit charge, process,
+service, scheduled-task and startup counts, the last boot-performance events, the system
+timer resolution, the active power scheme and gaming-related settings, and writes them as
+one JSON document. It changes nothing. Measure the same way before and after a change:
+after a restart, signed in, with nothing else open, a few minutes after sign-in. The boot
+events need an elevated prompt; unelevated, that section records why it is empty.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\dev\Measure-AtlasPerformance.ps1 -OutputPath perf-before.json
+```
+
 ### Release candidate regression checklist
 
 On a clean Windows checkpoint, install the rebuilt Atlas package with Atlas Manager, and

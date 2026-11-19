@@ -44,7 +44,8 @@ app/                                   Atlas Manager, the desktop app (Rust, GPU
 services/                              Atlas reports service and its MCP server
 tools/
 ├─ build/                              AtlasBuild module, Build-Playbook, Test-Apbx, Set-AtlasVersion (PowerShell 7)
-├─ dev/                                New-ToggleLaunchers, Export-AtlasCatalog, Compare-SystemState, Install-DevProfile
+├─ dev/                                New-ToggleLaunchers, Export-AtlasCatalog, Compare-SystemState, Install-DevProfile,
+│                                      Measure-AtlasPerformance
 ├─ lab/                                Invoke-AtlasLabRun: install and verify on a Hyper-V VM (PowerShell 7)
 ├─ native/                             Build-AtlasNative: deterministic, signable build of Atlas.Native.cs
 ├─ release/                            Linux cross-build setup and tester bundles (see building.md)
