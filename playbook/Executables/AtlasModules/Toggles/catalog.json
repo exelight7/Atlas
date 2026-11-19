@@ -466,6 +466,48 @@
       ]
     },
     {
+      "name": "ProcessorPerformancePreference",
+      "group": "Gaming",
+      "description": "exelight7: processor energy performance preference (EPP) of the active power plan on AC power. Enable sets it to 0, the value of the Windows High performance plan, so processors with hardware-controlled performance states (Intel Speed Shift, AMD CPPC) raise their clock as soon as load arrives. Disable restores the Windows default for the active plan (Balanced: 33). Battery (DC) values are not changed; processors without hardware P-states ignore the setting.",
+      "elevation": "Admin",
+      "noStateRecord": false,
+      "menu": false,
+      "launcher": null,
+      "warning": null,
+      "states": [
+        {
+          "name": "Disable",
+          "stateValue": 0,
+          "launcher": "3. General Configuration\\Gaming\\Processor Performance Preference\\Use Windows Default Processor Performance Preference (default).cmd",
+          "reboot": "None",
+          "work": {
+            "registry": 0,
+            "services": 0,
+            "scheduledTasks": 0,
+            "machineAction": "Reset-AtlasProcessorPerformancePreference",
+            "userAction": null,
+            "action": null,
+            "user": false
+          }
+        },
+        {
+          "name": "Enable",
+          "stateValue": 1,
+          "launcher": "3. General Configuration\\Gaming\\Processor Performance Preference\\Enable Processor Performance Preference.cmd",
+          "reboot": "None",
+          "work": {
+            "registry": 0,
+            "services": 0,
+            "scheduledTasks": 0,
+            "machineAction": "Enable-AtlasProcessorPerformancePreference",
+            "userAction": null,
+            "action": null,
+            "user": false
+          }
+        }
+      ]
+    },
+    {
       "name": "WindowedGameOptimizations",
       "group": "Gaming",
       "description": "exelight7: Optimizations for windowed games (Settings > Display > Graphics), which moves DirectX 10 and 11 games in windowed and borderless mode to the flip presentation model. Enable turns it on for the current user; Disable removes that choice so Windows decides again. Other graphics preferences (Auto HDR, variable refresh rate) are kept.",

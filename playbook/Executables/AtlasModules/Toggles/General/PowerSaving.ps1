@@ -16,11 +16,15 @@ function Invoke-AtlasPowerSavingToggle {
     Import-AtlasModule -Name Atlas.Hardware
     Set-AtlasPowerSavingState -Mode $mode -Silent:$Toggle.Silent
 
-    # CPU idle and sleep settings belong to a plan, and both modes leave a different
-    # plan active, so the recorded choices are applied to it again. The plan change
-    # stands even when a record can't be read or applied.
-    $planFolders = @{ CpuIdle = 'CPU Idle'; Sleep = 'Sleep' }
-    foreach ($planToggle in @('CpuIdle', 'Sleep')) {
+    # CPU idle, sleep and processor performance preference settings belong to a plan,
+    # and both modes leave a different plan active, so the recorded choices are applied
+    # to it again. The plan change stands even when a record can't be read or applied.
+    $planFolders = @{
+        CpuIdle                        = 'CPU Idle'
+        Sleep                          = 'Sleep'
+        ProcessorPerformancePreference = 'Gaming\Processor Performance Preference'
+    }
+    foreach ($planToggle in @('CpuIdle', 'Sleep', 'ProcessorPerformancePreference')) {
         try {
             $record = Get-AtlasToggleState -Name $planToggle -StateRoot $Toggle.StateRoot
             if ($null -eq $record -or $record.State -notin @(0, 1)) {

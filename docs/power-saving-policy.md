@@ -46,7 +46,9 @@ only these AC values:
 | Turn off display after (Display, `7516b95f-f776-4464-8c53-06167f40cc99`) | `3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e` | `0` | Never. Can increase display energy use. |
 | Processor performance time check interval (Processor power management, `54533251-82be-4824-96c1-47b60b740d00`) | `4d2b0152-7d5c-498b-88e2-34345392a2c5` | `200` | 200 ms, within the documented Windows range. An Atlas product choice, not a performance or DPC-latency guarantee. |
 
-Recorded CPU Idle and Sleep choices are applied to this plan too.
+Recorded CPU Idle, Sleep and processor performance preference choices are applied to
+this plan too. The exelight7 `ProcessorPerformancePreference` toggle changes the plan's
+AC energy performance preference; see [gaming-toggles.md](gaming-toggles.md).
 
 ## What the toggle does not change
 
@@ -102,9 +104,9 @@ implements both states.
   with a fresh duplicate of Balanced, sets the four AC values and activates it.
 - **Default** activates the saved plan if it is installed and is not the Atlas plan,
   otherwise Balanced, then deletes the Atlas plan.
-- **Per-plan choices:** CPU idle and sleep settings belong to each plan, so after
-  either state the toggle applies the recorded CpuIdle and Sleep choices to the plan it
-  left active. A recorded choice that doesn't apply on this PC, such as disabling CPU
+- **Per-plan choices:** CPU idle, sleep and processor performance preference settings
+  belong to each plan, so after either state the toggle applies the recorded CpuIdle,
+  Sleep and ProcessorPerformancePreference choices to the plan it left active. A recorded choice that doesn't apply on this PC, such as disabling CPU
   idle with SMT on, is skipped. One that can't be applied is logged as a warning, and
   an interactive run says to run that choice's launcher again; neither fails the
   toggle. Upgrade replay restores PowerSaving before them.

@@ -42,3 +42,27 @@ restart the game.
 from `Composed: Copy with GPU GDI` to a flip mode (`Composed: Flip` or
 `Hardware: Independent Flip`). Compare the average and 99th-percentile frame time and the
 display latency.
+
+## `ProcessorPerformancePreference`
+
+Energy performance preference (EPP, 0 to 100) tells a processor with hardware-controlled
+performance states (Intel Speed Shift, AMD CPPC) how readily to raise its clock: 0 favors
+performance and 100 favors energy saving. EPP is a power-plan setting, so it belongs to
+the active plan. Windows also keeps a second value (`PERFEPP1`) for the efficiency cores
+of hybrid processors.
+
+| State | What it does |
+| --- | --- |
+| Enable | Sets both AC values to `0` on the active plan. This is the value the Windows High performance plan uses. |
+| Disable (default) | Sets both AC values back to the Windows default for the active plan, read from `PowerSettings\...\DefaultPowerSchemeValues`. The Atlas plan and other copies of a Windows plan get the Balanced default (`33`). If Windows records no default, nothing is written. |
+
+Battery (DC) values and every other processor setting stay as they are. Core parking,
+boost mode and throttle states are already set by the Balanced copy that `PowerSaving`
+applies. Minimum processor state is left alone: raising it keeps the clock high at idle,
+which costs power and heat for little gain. `PowerSaving` applies the recorded choice
+again after it switches or rebuilds the plan. No restart is needed.
+
+**Measure:** `Measure-AtlasPerformance` records the active plan's processor values
+(`power.processor`) and the average processor performance percentage
+(`memory.cpuPerformancePercent`). Run it at idle, then run PresentMon in a CPU-limited
+scene. Compare the p99 and average frame time and `MsCPUBusy`.

@@ -8,7 +8,7 @@ BeforeAll {
     $togglesRoot = Join-Path $script:AtlasTestRepoRoot 'playbook\Executables\AtlasModules\Toggles'
     $script:PowerSaving = Get-AtlasToggleDefinition -Name PowerSaving -TogglesRoot $togglesRoot
     $script:PlanDefinitions = @{}
-    foreach ($name in @('CpuIdle', 'Sleep')) {
+    foreach ($name in @('CpuIdle', 'Sleep', 'ProcessorPerformancePreference')) {
         $script:PlanDefinitions[$name] = Get-AtlasToggleDefinition -Name $name -TogglesRoot $togglesRoot
     }
 
@@ -55,6 +55,18 @@ Describe 'PowerSaving carries the per-plan choices over to the new plan' {
             $StateRoot -ceq $script:StateRoot
         }
         (Get-AtlasToggleState -Name PowerSaving -StateRoot $script:StateRoot).State | Should -Be 0
+    }
+
+    It 'applies a recorded processor performance preference to the new plan after CpuIdle and Sleep' {
+        Set-AtlasToggleState -Name Sleep -State 0 -StateRoot $script:StateRoot
+        Set-AtlasToggleState -Name ProcessorPerformancePreference -State 1 -StateRoot $script:StateRoot
+
+        Invoke-PowerSavingState -State Disable
+
+        @($script:calls) | Should -Be @('PowerSaving/Atlas', 'Sleep/Disable', 'ProcessorPerformancePreference/Enable')
+        Should -Invoke Invoke-AtlasToggleMachineState -ModuleName Atlas.Toggles -Times 1 -Exactly -ParameterFilter {
+            $Name -ceq 'ProcessorPerformancePreference' -and $StateRoot -ceq $script:StateRoot
+        }
     }
 
     It 'changes nothing else when no per-plan choice is recorded' {
