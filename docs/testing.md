@@ -198,8 +198,8 @@ why, and the report still completes.
 
 `tools/dev/Measure-AtlasPerformance.ps1` reads idle memory, commit charge, process,
 service, scheduled-task and startup counts, the last boot-performance events, the system
-timer resolution, the active power scheme and gaming-related settings, and writes them as
-one JSON document. It changes nothing. Measure the same way before and after a change:
+timer resolution, the active power scheme, gaming-related settings and each display
+adapter's hardware GPU scheduling support and state, and writes them as one JSON document. It changes nothing. Measure the same way before and after a change:
 after a restart, signed in, with nothing else open, a few minutes after sign-in. The boot
 events need an elevated prompt; unelevated, that section records why it is empty.
 

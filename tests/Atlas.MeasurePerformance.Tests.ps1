@@ -130,6 +130,43 @@ Describe 'Measure-AtlasPerformance pure helpers' {
         $errors.Contains('fine') | Should -BeFalse
     }
 
+    It 'decodes the WDDM 2.7 hardware GPU scheduling capability bits' {
+        $off = ConvertFrom-GpuSchedulingCapability -Value 8
+        $off.supported | Should -BeFalse
+        $off.enabled | Should -BeFalse
+        $off.enabledByDefault | Should -BeFalse
+        $off.independentVidPnVSyncControl | Should -BeTrue
+        $off.raw | Should -Be '0x00000008'
+
+        $on = ConvertFrom-GpuSchedulingCapability -Value 7
+        $on.supported | Should -BeTrue
+        $on.enabled | Should -BeTrue
+        $on.enabledByDefault | Should -BeTrue
+        $on.independentVidPnVSyncControl | Should -BeFalse
+    }
+
+    It 'summarizes GPU scheduling per adapter and skips the flags of a failed query' {
+        $adapter = @(
+            [pscustomobject]@{ Name = 'GPU A'; LuidLow = [uint32]0xC3DE; LuidHigh = 0; Status = 0; Caps = [uint32]8 }
+            [pscustomobject]@{ Name = ''; LuidLow = [uint32]0xDDDA; LuidHigh = 0; Status = [int]0xC000000D; Caps = [uint32]0 }
+        )
+        $summary = Get-GpuSchedulingSummary -Adapter $adapter
+        $summary.anySupported | Should -BeFalse
+        $summary.anyEnabled | Should -BeFalse
+        @($summary.adapters).Count | Should -Be 2
+        $summary.adapters[0].name | Should -Be 'GPU A'
+        $summary.adapters[0].luid | Should -Be '00000000:0000C3DE'
+        $summary.adapters[0].supported | Should -BeFalse
+        $summary.adapters[1].name | Should -BeNullOrEmpty
+        $summary.adapters[1].queryStatus | Should -Be '0xC000000D'
+        $summary.adapters[1].PSObject.Properties.Name | Should -Not -Contain 'supported'
+
+        $supported = Get-GpuSchedulingSummary -Adapter @([pscustomobject]@{ Name = 'GPU B'; LuidLow = [uint32]1; LuidHigh = 0; Status = 0; Caps = [uint32]3 })
+        $supported.anySupported | Should -BeTrue
+        $supported.anyEnabled | Should -BeTrue
+        (Get-GpuSchedulingSummary -Adapter @()).anySupported | Should -BeFalse
+    }
+
     It 'reads the installed version and options from the state document' {
         $path = Join-Path $TestDrive 'state.json'
         Set-Content -LiteralPath $path -Value '{"installedVersion":"0.6.0","installedAt":"t","options":["a","b"]}'
@@ -150,7 +187,7 @@ Describe 'Measure-AtlasPerformance document' {
 
         $document = [IO.File]::ReadAllText($output) | ConvertFrom-Json
         $document.schemaVersion | Should -Be 1
-        foreach ($section in 'os', 'memory', 'processes', 'services', 'tasks', 'startup', 'boot', 'timer', 'power', 'gaming', 'appx', 'errors') {
+        foreach ($section in 'os', 'memory', 'processes', 'services', 'tasks', 'startup', 'boot', 'timer', 'power', 'gaming', 'gpuScheduling', 'appx', 'errors') {
             $document.PSObject.Properties.Name | Should -Contain $section
         }
         $document.memory.totalMB | Should -BeGreaterThan 0
@@ -158,5 +195,7 @@ Describe 'Measure-AtlasPerformance document' {
         $document.services.running | Should -BeGreaterThan 0
         $document.timer.currentMs | Should -BeGreaterThan 0
         $document.power.guid | Should -Match '^[0-9a-f-]{36}$'
+        $document.errors.PSObject.Properties.Name | Should -Not -Contain 'gpuScheduling'
+        @($document.gpuScheduling.adapters).Count | Should -BeGreaterThan 0
     }
 }

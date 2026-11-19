@@ -21,7 +21,8 @@
       boot        the last boot-performance events (Event 100)
       timer       the current, minimum and maximum system timer resolution
       power       the active power scheme
-      gaming      Game Mode, GPU scheduling, Game DVR, mouse acceleration, VBS
+      gaming      Game Mode, the HwSchMode value, Game DVR, mouse acceleration, VBS
+      gpuScheduling  per-adapter hardware GPU scheduling support and state (D3DKMT)
       appx        installed package counts for the current user
 .EXAMPLE
     .\tools\dev\Measure-AtlasPerformance.ps1 -OutputPath perf-before.json
@@ -371,6 +372,140 @@ function Get-GamingContext {
     }
 }
 
+function ConvertFrom-GpuSchedulingCapability {
+    <# Decodes D3DKMT_WDDM_2_7_CAPS: bit 0 HwSchSupported, bit 1 HwSchEnabled,
+       bit 2 HwSchEnabledByDefault, bit 3 IndependentVidPnVSyncControl. #>
+    param([Parameter(Mandatory = $true)][uint32]$Value)
+
+    return [ordered]@{
+        supported = [bool]($Value -band 1)
+        enabled = [bool]($Value -band 2)
+        enabledByDefault = [bool]($Value -band 4)
+        independentVidPnVSyncControl = [bool]($Value -band 8)
+        raw = ('0x{0:X8}' -f $Value)
+    }
+}
+
+function Get-GpuSchedulingAdapter {
+    <# Reads each display adapter's hardware GPU scheduling capability through D3DKMT
+       (read-only queries; adapter handles are closed again). #>
+    if (-not ('AtlasPerf.GpuScheduling' -as [type])) {
+        Add-Type -TypeDefinition @'
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+
+namespace AtlasPerf
+{
+    public sealed class GpuAdapterCaps
+    {
+        public string Name;
+        public uint LuidLow;
+        public int LuidHigh;
+        public int Status;
+        public uint Caps;
+    }
+
+    public static class GpuScheduling
+    {
+        [StructLayout(LayoutKind.Sequential)] struct Luid { public uint Low; public int High; }
+        [StructLayout(LayoutKind.Sequential)] struct AdapterInfo { public uint Handle; public Luid AdapterLuid; public uint NumOfSources; public int PrecisePresentRegionsPreferred; }
+        [StructLayout(LayoutKind.Sequential)] struct EnumAdapters2 { public uint NumAdapters; public IntPtr Adapters; }
+        [StructLayout(LayoutKind.Sequential)] struct QueryAdapterInfo { public uint Handle; public int Type; public IntPtr Data; public uint DataSize; }
+        [StructLayout(LayoutKind.Sequential)] struct CloseAdapter { public uint Handle; }
+
+        [DllImport("gdi32.dll")] static extern int D3DKMTEnumAdapters2(ref EnumAdapters2 data);
+        [DllImport("gdi32.dll")] static extern int D3DKMTQueryAdapterInfo(ref QueryAdapterInfo data);
+        [DllImport("gdi32.dll")] static extern int D3DKMTCloseAdapter(ref CloseAdapter data);
+
+        const int AdapterRegistryInfo = 8;   // KMTQAITYPE_ADAPTERREGISTRYINFO
+        const int Wddm27Caps = 70;           // KMTQAITYPE_WDDM_2_7_CAPS
+
+        public static GpuAdapterCaps[] Query()
+        {
+            EnumAdapters2 enumeration = new EnumAdapters2();
+            int status = D3DKMTEnumAdapters2(ref enumeration);
+            if (status != 0) { throw new InvalidOperationException(String.Format("D3DKMTEnumAdapters2 returned 0x{0:X8}.", status)); }
+            int size = Marshal.SizeOf(typeof(AdapterInfo));
+            enumeration.Adapters = Marshal.AllocHGlobal(size * (int)Math.Max(enumeration.NumAdapters, 1u));
+            try
+            {
+                status = D3DKMTEnumAdapters2(ref enumeration);
+                if (status != 0) { throw new InvalidOperationException(String.Format("D3DKMTEnumAdapters2 returned 0x{0:X8}.", status)); }
+                List<GpuAdapterCaps> result = new List<GpuAdapterCaps>();
+                for (int i = 0; i < enumeration.NumAdapters; i++)
+                {
+                    AdapterInfo adapter = (AdapterInfo)Marshal.PtrToStructure(new IntPtr(enumeration.Adapters.ToInt64() + (long)i * size), typeof(AdapterInfo));
+                    GpuAdapterCaps caps = new GpuAdapterCaps();
+                    caps.LuidLow = adapter.AdapterLuid.Low;
+                    caps.LuidHigh = adapter.AdapterLuid.High;
+                    try
+                    {
+                        int nameSize = 4 * 260 * 2;
+                        IntPtr name = Marshal.AllocHGlobal(nameSize);
+                        try
+                        {
+                            QueryAdapterInfo query = new QueryAdapterInfo { Handle = adapter.Handle, Type = AdapterRegistryInfo, Data = name, DataSize = (uint)nameSize };
+                            if (D3DKMTQueryAdapterInfo(ref query) == 0) { caps.Name = Marshal.PtrToStringUni(name); }
+                        }
+                        finally { Marshal.FreeHGlobal(name); }
+
+                        IntPtr value = Marshal.AllocHGlobal(4);
+                        try
+                        {
+                            Marshal.WriteInt32(value, 0);
+                            QueryAdapterInfo query = new QueryAdapterInfo { Handle = adapter.Handle, Type = Wddm27Caps, Data = value, DataSize = 4 };
+                            caps.Status = D3DKMTQueryAdapterInfo(ref query);
+                            caps.Caps = (uint)Marshal.ReadInt32(value);
+                        }
+                        finally { Marshal.FreeHGlobal(value); }
+                    }
+                    finally
+                    {
+                        CloseAdapter close = new CloseAdapter { Handle = adapter.Handle };
+                        D3DKMTCloseAdapter(ref close);
+                    }
+                    result.Add(caps);
+                }
+                return result.ToArray();
+            }
+            finally { Marshal.FreeHGlobal(enumeration.Adapters); }
+        }
+    }
+}
+'@
+    }
+
+    return @([AtlasPerf.GpuScheduling]::Query())
+}
+
+function Get-GpuSchedulingSummary {
+    <# Builds the gpuScheduling section from adapter readings; an adapter whose caps
+       query failed is reported with its status and no capability flags. #>
+    param([AllowEmptyCollection()][object[]]$Adapter = @())
+
+    $adapters = New-Object System.Collections.Generic.List[object]
+    foreach ($item in $Adapter) {
+        $entry = [ordered]@{
+            name = if ([string]::IsNullOrEmpty([string]$item.Name)) { $null } else { [string]$item.Name }
+            luid = ('{0:X8}:{1:X8}' -f [int]$item.LuidHigh, [uint32]$item.LuidLow)
+            queryStatus = ('0x{0:X8}' -f [int]$item.Status)
+        }
+        if ([int]$item.Status -eq 0) {
+            $decoded = ConvertFrom-GpuSchedulingCapability -Value ([uint32]$item.Caps)
+            foreach ($key in $decoded.Keys) { $entry[$key] = $decoded[$key] }
+        }
+        $adapters.Add([pscustomobject]$entry)
+    }
+    $list = $adapters.ToArray()
+    return [ordered]@{
+        anySupported = [bool](@($list | Where-Object { $_.PSObject.Properties.Name -contains 'supported' -and $_.supported }).Count)
+        anyEnabled = [bool](@($list | Where-Object { $_.PSObject.Properties.Name -contains 'enabled' -and $_.enabled }).Count)
+        hwSchMode = Get-RegistryValueOrNull -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers' -Name 'HwSchMode'
+        adapters = $list
+    }
+}
+
 function Get-OsContext {
     param([int]$SettledUptime)
 
@@ -467,6 +602,9 @@ $document.power = Invoke-MeasureSection -Name 'power' -Errors $errors -Collector
     ConvertFrom-PowerCfgActiveScheme -Line $output
 }
 $document.gaming = Invoke-MeasureSection -Name 'gaming' -Errors $errors -Collector { Get-GamingContext }
+$document.gpuScheduling = Invoke-MeasureSection -Name 'gpuScheduling' -Errors $errors -Collector {
+    Get-GpuSchedulingSummary -Adapter (Get-GpuSchedulingAdapter)
+}
 $document.appx = Invoke-MeasureSection -Name 'appx' -Errors $errors -Collector { Get-AppxSummary }
 $document.errors = $errors
 
