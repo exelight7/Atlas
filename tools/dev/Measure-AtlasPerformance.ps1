@@ -14,13 +14,15 @@
     Sections:
       os          edition, build and revision, uptime, elevation
       memory      averaged samples: in use, available, commit charge, cache, pools, CPU
+                  use, and processor performance (% of base clock) and frequency
       processes   process, thread and handle counts, the largest processes by name
       services    running, automatic and delayed services, and the running list
       tasks       enabled and ready scheduled tasks, and the enabled list
       startup     Run keys and Startup folders with their Task Manager enabled state
       boot        the last boot-performance events (Event 100)
       timer       the current, minimum and maximum system timer resolution
-      power       the active power scheme
+      power       the active power scheme and its AC processor settings (EPP, min/max
+                  state, boost mode, core parking, idle disable)
       gaming      Game Mode, the HwSchMode value, Game DVR, mouse acceleration, VBS
       gpuScheduling  per-adapter hardware GPU scheduling support and state (D3DKMT)
       appx        installed package counts for the current user
@@ -106,13 +108,34 @@ function Get-MemorySummary {
         pagedPoolMB = ConvertTo-Megabyte (Get-AverageValue -Value @($Sample | ForEach-Object { [double]$_.PagedPoolBytes }))
         nonPagedPoolMB = ConvertTo-Megabyte (Get-AverageValue -Value @($Sample | ForEach-Object { [double]$_.NonPagedPoolBytes }))
         cpuPercent = Get-AverageValue -Value @($Sample | ForEach-Object { [double]$_.CpuPercent })
+        cpuPerformancePercent = Get-OptionalAverage -Sample $Sample -Name 'CpuPerformancePercent'
+        processorFrequencyMHz = Get-OptionalAverage -Sample $Sample -Name 'ProcessorFrequencyMHz'
     }
+}
+
+function Get-OptionalAverage {
+    <# Averages one sample property that a sample may lack or hold as null; null when no
+       sample has it. #>
+    param(
+        [Parameter(Mandatory = $true)][object[]]$Sample,
+        [Parameter(Mandatory = $true)][string]$Name
+    )
+
+    $values = @($Sample | Where-Object {
+            $_.PSObject.Properties.Name -contains $Name -and $null -ne $_.$Name
+        } | ForEach-Object { [double]$_.$Name })
+    if ($values.Count -eq 0) { return $null }
+    return Get-AverageValue -Value $values
 }
 
 function Get-MemorySample {
     $os = Get-CimInstance -ClassName Win32_OperatingSystem
     $memory = Get-CimInstance -ClassName Win32_PerfFormattedData_PerfOS_Memory
     $cpu = Get-CimInstance -ClassName Win32_PerfFormattedData_PerfOS_Processor -Filter "Name='_Total'"
+    # % Processor Performance is the clock relative to the base frequency (above 100 while
+    # boosting); it shows how a power plan lets the processor ramp.
+    $performance = Get-CimInstance -ClassName Win32_PerfFormattedData_Counters_ProcessorInformation `
+        -Filter "Name='_Total'" -ErrorAction SilentlyContinue
     return [pscustomobject]@{
         TotalBytes = [double]$os.TotalVisibleMemorySize * 1KB
         AvailableBytes = [double]$memory.AvailableBytes
@@ -122,6 +145,8 @@ function Get-MemorySample {
         PagedPoolBytes = [double]$memory.PoolPagedBytes
         NonPagedPoolBytes = [double]$memory.PoolNonpagedBytes
         CpuPercent = [double]$cpu.PercentProcessorTime
+        CpuPerformancePercent = if ($performance) { [double]$performance.PercentProcessorPerformance } else { $null }
+        ProcessorFrequencyMHz = if ($performance) { [double]$performance.ProcessorFrequency } else { $null }
     }
 }
 
@@ -335,6 +360,40 @@ function ConvertFrom-PowerCfgActiveScheme {
         return [ordered]@{ guid = $guidOnly.Value.ToLowerInvariant(); name = $null }
     }
     return [ordered]@{ guid = $match.Groups[1].Value.ToLowerInvariant(); name = $match.Groups[2].Value.Trim() }
+}
+
+function Get-ProcessorPowerPolicy {
+    <# Reads the AC processor power settings of one plan through PowerReadACValueIndex,
+       which returns the effective value whether or not the plan stores it explicitly.
+       A setting this Windows does not define is null. #>
+    param([Parameter(Mandatory = $true)][string]$Scheme)
+
+    if (-not ('AtlasPerf.PowerPolicy' -as [type])) {
+        Add-Type -Namespace AtlasPerf -Name PowerPolicy -MemberDefinition @'
+[System.Runtime.InteropServices.DllImport("powrprof.dll")]
+public static extern uint PowerReadACValueIndex(System.IntPtr RootPowerKey, ref System.Guid SchemeGuid, ref System.Guid SubGroupOfPowerSettingsGuid, ref System.Guid PowerSettingGuid, out uint AcValueIndex);
+'@
+    }
+
+    $processor = [guid]'54533251-82be-4824-96c1-47b60b740d00'
+    $settings = [ordered]@{
+        minStateAc = '893dee8e-2bef-41e0-89c6-b55d0929964c'
+        maxStateAc = 'bc5038f7-23e0-4960-96da-33abaf5935ec'
+        eppAc = '36687f9e-e3a5-4dbf-b1dc-15eb381c6863'
+        epp1Ac = '36687f9e-e3a5-4dbf-b1dc-15eb381c6864'
+        boostModeAc = 'be337238-0d82-4146-a960-4f3749d470c7'
+        coreParkingMinAc = '0cc5b647-c1df-4637-891a-dec35c318583'
+        idleDisableAc = '5d76a2ca-e8c0-402f-a133-2158492d58ad'
+    }
+    $schemeGuid = [guid]$Scheme
+    $result = [ordered]@{}
+    foreach ($name in $settings.Keys) {
+        $settingGuid = [guid]$settings[$name]
+        [uint32]$value = 0
+        $status = [AtlasPerf.PowerPolicy]::PowerReadACValueIndex([IntPtr]::Zero, [ref]$schemeGuid, [ref]$processor, [ref]$settingGuid, [ref]$value)
+        $result[$name] = if ($status -eq 0) { [int]$value } else { $null }
+    }
+    return $result
 }
 
 function Get-RegistryValueOrNull {
@@ -599,7 +658,9 @@ $document.timer = Invoke-MeasureSection -Name 'timer' -Errors $errors -Collector
 $document.power = Invoke-MeasureSection -Name 'power' -Errors $errors -Collector {
     $output = @(& powercfg.exe /getactivescheme 2>&1 | ForEach-Object { [string]$_ })
     if ($LASTEXITCODE -ne 0) { throw "powercfg exited with $LASTEXITCODE." }
-    ConvertFrom-PowerCfgActiveScheme -Line $output
+    $scheme = ConvertFrom-PowerCfgActiveScheme -Line $output
+    $scheme['processor'] = Get-ProcessorPowerPolicy -Scheme $scheme.guid
+    $scheme
 }
 $document.gaming = Invoke-MeasureSection -Name 'gaming' -Errors $errors -Collector { Get-GamingContext }
 $document.gpuScheduling = Invoke-MeasureSection -Name 'gpuScheduling' -Errors $errors -Collector {

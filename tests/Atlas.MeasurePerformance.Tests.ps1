@@ -72,6 +72,20 @@ Describe 'Measure-AtlasPerformance pure helpers' {
         $summary.commitMB | Should -Be 4096
         $summary.nonPagedPoolMB | Should -Be 128
         $summary.cpuPercent | Should -Be 3
+        $summary.cpuPerformancePercent | Should -BeNullOrEmpty
+        $summary.processorFrequencyMHz | Should -BeNullOrEmpty
+    }
+
+    It 'averages processor performance and frequency only over samples that have them' {
+        $sample = @(
+            [pscustomobject]@{ CpuPerformancePercent = 80; ProcessorFrequencyMHz = 2900 }
+            [pscustomobject]@{ CpuPerformancePercent = $null; ProcessorFrequencyMHz = $null }
+            [pscustomobject]@{ CpuPerformancePercent = 120; ProcessorFrequencyMHz = 2900 }
+            [pscustomobject]@{ Other = 1 }
+        )
+        Get-OptionalAverage -Sample $sample -Name CpuPerformancePercent | Should -Be 100
+        Get-OptionalAverage -Sample $sample -Name ProcessorFrequencyMHz | Should -Be 2900
+        Get-OptionalAverage -Sample $sample -Name Missing | Should -BeNullOrEmpty
     }
 
     It 'groups processes by name and sums their counters' {
@@ -195,6 +209,9 @@ Describe 'Measure-AtlasPerformance document' {
         $document.services.running | Should -BeGreaterThan 0
         $document.timer.currentMs | Should -BeGreaterThan 0
         $document.power.guid | Should -Match '^[0-9a-f-]{36}$'
+        $document.power.processor.maxStateAc | Should -BeGreaterThan 0
+        $document.power.processor.eppAc | Should -BeGreaterOrEqual 0
+        $document.memory.cpuPerformancePercent | Should -BeGreaterThan 0
         $document.errors.PSObject.Properties.Name | Should -Not -Contain 'gpuScheduling'
         @($document.gpuScheduling.adapters).Count | Should -BeGreaterThan 0
     }
