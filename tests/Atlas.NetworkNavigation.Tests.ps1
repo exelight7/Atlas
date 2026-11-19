@@ -5,6 +5,7 @@ BeforeAll {
     }
     $script:payloadRoot = Split-Path -Parent $script:AtlasTestScriptsRoot
     $script:fileSharing = Get-AtlasToggleDefinition -Name FileSharing -TogglesRoot (Join-Path $script:payloadRoot 'Toggles')
+    $script:networkPane = Get-AtlasToggleDefinition -Name NetworkNavigationPane -TogglesRoot (Join-Path $script:payloadRoot 'Toggles')
 
     # Runs the Enable user action the way the engine does: with the engine's own
     # $Toggle context, dot-sourced inside Atlas.Toggles under strict mode.
@@ -43,6 +44,9 @@ Describe 'Independent Explorer Network choice' {
 
     It 'keeps the fresh hidden default and detects a failed explicit visibility choice' {
         $path = Join-Path $script:AtlasTestScriptsRoot 'Tweaks\qol\explorer\disable-network-navigation-pane.psd1'
+        # Without a loadable NetworkNavigationPane definition the tweak entry is checked
+        # against its VerifyWithToggle choice. Never read the host's installed toggles.
+        Mock -ModuleName Atlas.Tweaks Get-AtlasToggleDefinition { throw 'No toggle definition in this test.' }
         Mock -ModuleName Atlas.Registry Get-AtlasRegistryValueState {
             [pscustomobject]@{ KeyExists = $true; ValueExists = $true; Kind = 'DWord'; Data = 0 }
         }
@@ -55,5 +59,17 @@ Describe 'Independent Explorer Network choice' {
             [pscustomobject]@{ KeyExists = $true; ValueExists = $false; Kind = $null; Data = $null }
         }
         @(Test-AtlasTweak -Path $path -RegistryScope CurrentUser -Context $context -RecordedToggleStates @{ NetworkNavigationPane = 1 }).Count | Should -Be 0
+    }
+
+    It 'leaves a recorded visibility choice to toggle verification when the definition loads' {
+        $path = Join-Path $script:AtlasTestScriptsRoot 'Tweaks\qol\explorer\disable-network-navigation-pane.psd1'
+        Mock -ModuleName Atlas.Tweaks Get-AtlasToggleDefinition { $script:networkPane } -ParameterFilter { $Name -ceq 'NetworkNavigationPane' }
+        Mock -ModuleName Atlas.Registry Get-AtlasRegistryValueState {
+            [pscustomobject]@{ KeyExists = $true; ValueExists = $true; Kind = 'DWord'; Data = 0 }
+        }
+        $context = [pscustomobject]@{ IsArm64 = $false; WindowsBuild = 26200; IsUpgrade = $false; IsOobe = $false; Options = @() }
+        @(Test-AtlasTweak -Path $path -RegistryScope CurrentUser -Context $context).Count | Should -Be 0
+        @(Test-AtlasTweak -Path $path -RegistryScope CurrentUser -Context $context -RecordedToggleStates @{ NetworkNavigationPane = 1 }).Count | Should -Be 0
+        Should -Invoke Get-AtlasToggleDefinition -ModuleName Atlas.Tweaks -Times 1 -Exactly
     }
 }
