@@ -1,3 +1,10 @@
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSUseDeclaredVarsMoreThanAssignments',
+    'dism',
+    Justification = 'The failed-DISM tests set $dism for Invoke-AtlasDism, which reads it from its caller''s scope.'
+)]
+param()
+
 BeforeAll {
     . (Join-Path $PSScriptRoot 'AtlasTestHost.ps1')
     $script:featuresPhase = Join-Path $script:AtlasTestScriptsRoot 'Install\Phases\Invoke-FeaturesPhase.ps1'
