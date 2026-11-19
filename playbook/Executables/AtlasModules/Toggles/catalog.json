@@ -466,6 +466,48 @@
       ]
     },
     {
+      "name": "WindowedGameOptimizations",
+      "group": "Gaming",
+      "description": "exelight7: Optimizations for windowed games (Settings > Display > Graphics), which moves DirectX 10 and 11 games in windowed and borderless mode to the flip presentation model. Enable turns it on for the current user; Disable removes that choice so Windows decides again. Other graphics preferences (Auto HDR, variable refresh rate) are kept.",
+      "elevation": "Admin",
+      "noStateRecord": false,
+      "menu": false,
+      "launcher": null,
+      "warning": null,
+      "states": [
+        {
+          "name": "Disable",
+          "stateValue": 0,
+          "launcher": "3. General Configuration\\Gaming\\Windowed Game Optimizations\\Use Windows Default Windowed Game Optimizations (default).cmd",
+          "reboot": "None",
+          "work": {
+            "registry": 0,
+            "services": 0,
+            "scheduledTasks": 0,
+            "machineAction": null,
+            "userAction": "Reset-AtlasWindowedGameOptimization",
+            "action": null,
+            "user": true
+          }
+        },
+        {
+          "name": "Enable",
+          "stateValue": 1,
+          "launcher": "3. General Configuration\\Gaming\\Windowed Game Optimizations\\Enable Windowed Game Optimizations.cmd",
+          "reboot": "None",
+          "work": {
+            "registry": 0,
+            "services": 0,
+            "scheduledTasks": 0,
+            "machineAction": null,
+            "userAction": "Enable-AtlasWindowedGameOptimization",
+            "action": null,
+            "user": true
+          }
+        }
+      ]
+    },
+    {
       "name": "AppStoreArchiving",
       "group": "General",
       "description": "Microsoft Store automatic app archiving.",
