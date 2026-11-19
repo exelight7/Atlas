@@ -266,16 +266,17 @@ Elevation: Admin
 
 ### FSOGameBar
 
-Fullscreen Optimizations (FSO) and Game Bar / Game DVR support. Machine changes run as TrustedInstaller; current-user changes run in the caller's session.
+Fullscreen Optimizations (FSO) and Game Bar / Game DVR support. Machine changes run as TrustedInstaller; current-user changes run in the caller's session. exelight7: DisableCapture keeps FSO and Game Bar but turns off Game Bar game capture and the Xbox presence writer.
 
 Elevation: TrustedInstaller
 
-> Changes the Game Bar and Game DVR services and packages. While disabled, Game Bar shortcuts, game recording and fullscreen optimizations are unavailable.
+> Changes the Game Bar and Game DVR services and packages. While disabled, Game Bar shortcuts, game recording and fullscreen optimizations are unavailable. With game capture only disabled, Game Bar recording and screenshots and Xbox presence are unavailable; Game Bar widgets, FSO and other recording software keep working.
 
 | State | Value | Launcher | Reboot | Work |
 | --- | --- | --- | --- | --- |
 | Disable | 0 | `3. General Configuration\FSO and Game Bar\Disable FSO and Game Bar Support.cmd` | None | registry 15, machineAction `Remove-AtlasGameBarOverlayPackage` |
 | Enable | 1 | `3. General Configuration\FSO and Game Bar\Enable FSO and Game Bar Support (default).cmd` | None | registry 15, userAction `Install-AtlasGameBarPackage` |
+| DisableCapture | 2 | `3. General Configuration\FSO and Game Bar\Disable Game Capture Only.cmd` | None | registry 15, userAction `Install-AtlasGameBarPackage` |
 
 ### GiveAccessToMenu
 

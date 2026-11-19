@@ -1,8 +1,8 @@
 @{
     Name        = 'FSOGameBar'
-    Description = 'Fullscreen Optimizations (FSO) and Game Bar / Game DVR support. Machine changes run as TrustedInstaller; current-user changes run in the caller''s session.'
+    Description = 'Fullscreen Optimizations (FSO) and Game Bar / Game DVR support. Machine changes run as TrustedInstaller; current-user changes run in the caller''s session. exelight7: DisableCapture keeps FSO and Game Bar but turns off Game Bar game capture and the Xbox presence writer.'
     Elevation   = 'TrustedInstaller'
-    Warning     = 'Changes the Game Bar and Game DVR services and packages. While disabled, Game Bar shortcuts, game recording and fullscreen optimizations are unavailable.'
+    Warning     = 'Changes the Game Bar and Game DVR services and packages. While disabled, Game Bar shortcuts, game recording and fullscreen optimizations are unavailable. With game capture only disabled, Game Bar recording and screenshots and Xbox presence are unavailable; Game Bar widgets, FSO and other recording software keep working.'
     Script      = 'FSOGameBar.ps1'
     States      = @(
         @{
@@ -50,6 +50,31 @@
                 @{ Path = 'HKCU:\SOFTWARE\Microsoft\GameBar'; Name = 'UseNexusForGameBarEnabled'; Operation = 'Delete' }
                 @{ Path = 'HKCU:\System\GameConfigStore'; Name = 'GameDVR_Enabled'; Type = 'DWord'; Data = 1 }
                 @{ Path = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\GameDVR'; Name = 'AppCaptureEnabled'; Operation = 'Delete' }
+            )
+            UserAction = 'Install-AtlasGameBarPackage'
+        }
+        # exelight7: the Enable state with Game Bar capture and the Xbox presence writer off.
+        @{
+            Name       = 'DisableCapture'
+            StateValue = 2
+            Launcher   = '3. General Configuration\FSO and Game Bar\Disable Game Capture Only.cmd'
+            Reboot     = 'None'
+            Registry   = @(
+                @{ Path = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'; Name = '__COMPAT_LAYER'; Operation = 'Delete' }
+                @{ Path = 'HKLM:\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Windows.Gaming.GameBar.PresenceServer.Internal.PresenceWriter'; Name = 'ActivationType'; Type = 'DWord'; Data = 0 }
+                @{ Path = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR'; Operation = 'DeleteKey' }
+                @{ Path = 'HKLM:\SOFTWARE\Microsoft\PolicyManager\default\ApplicationManagement\AllowGameDVR'; Name = 'value'; Type = 'DWord'; Data = 1 }
+                @{ Path = 'HKCU:\System\GameConfigStore'; Name = 'GameDVR_DSEBehavior'; Operation = 'Delete' }
+                @{ Path = 'HKCU:\System\GameConfigStore'; Name = 'GameDVR_DXGIHonorFSEWindowsCompatible'; Type = 'DWord'; Data = 0 }
+                @{ Path = 'HKCU:\System\GameConfigStore'; Name = 'GameDVR_EFSEFeatureFlags'; Type = 'DWord'; Data = 0 }
+                @{ Path = 'HKCU:\System\GameConfigStore'; Name = 'GameDVR_FSEBehavior'; Operation = 'Delete' }
+                @{ Path = 'HKCU:\System\GameConfigStore'; Name = 'GameDVR_FSEBehaviorMode'; Type = 'DWord'; Data = 2 }
+                @{ Path = 'HKCU:\System\GameConfigStore'; Name = 'GameDVR_HonorUserFSEBehaviorMode'; Type = 'DWord'; Data = 0 }
+                @{ Path = 'HKCU:\SOFTWARE\Microsoft\GameBar'; Name = 'GamePanelStartupTipIndex'; Operation = 'Delete' }
+                @{ Path = 'HKCU:\SOFTWARE\Microsoft\GameBar'; Name = 'ShowStartupPanel'; Operation = 'Delete' }
+                @{ Path = 'HKCU:\SOFTWARE\Microsoft\GameBar'; Name = 'UseNexusForGameBarEnabled'; Operation = 'Delete' }
+                @{ Path = 'HKCU:\System\GameConfigStore'; Name = 'GameDVR_Enabled'; Type = 'DWord'; Data = 0 }
+                @{ Path = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\GameDVR'; Name = 'AppCaptureEnabled'; Type = 'DWord'; Data = 0 }
             )
             UserAction = 'Install-AtlasGameBarPackage'
         }

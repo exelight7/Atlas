@@ -5,7 +5,9 @@ undone from its `(default)` launcher, and changes nothing Atlas applies at insta
 them touch Secure Boot, TPM, test signing, driver signing or anti-cheat services
 (Vanguard, Easy Anti-Cheat, BattlEye).
 
-Launchers are in `AtlasDesktop\3. General Configuration\Gaming\`.
+Launchers are in `AtlasDesktop\3. General Configuration\Gaming\`. One extra state of the upstream
+`FSOGameBar` toggle is also documented here; its launcher stays in that toggle's
+`FSO and Game Bar` folder.
 
 ## How a gaming toggle is accepted
 
@@ -66,3 +68,27 @@ again after it switches or rebuilds the plan. No restart is needed.
 (`power.processor`) and the average processor performance percentage
 (`memory.cpuPerformancePercent`). Run it at idle, then run PresentMon in a CPU-limited
 scene. Compare the p99 and average frame time and `MsCPUBusy`.
+
+## `FSOGameBar` state `DisableCapture`
+
+The upstream `FSOGameBar` toggle owns the Game Bar capture and presence settings. A
+second toggle would put two owners on the same registry values, so exelight7 adds a
+third state instead.
+
+| State | StateValue | What it does |
+| --- | ---: | --- |
+| Disable | 0 | Upstream. Turns off FSO and removes the Game Bar package. |
+| Enable (default) | 1 | Upstream. Turns on FSO, Game Bar and capture. |
+| DisableCapture | 2 | Same as Enable, except three values: `GameConfigStore\GameDVR_Enabled` = 0, `GameDVR\AppCaptureEnabled` = 0 and the `PresenceWriter` `ActivationType` = 0. |
+
+`DisableCapture` turns off Game Bar recording, screenshots and the Xbox presence writer
+(`GameBarPresenceWriter.exe`), which otherwise starts with each game. FSO, the Game Bar
+widgets and the Game Bar package stay; the package is installed again only if it is
+missing. The `AllowGameDVR` policy is not set, because that would turn off Game Bar
+entirely. Other recording software, such as AMD Instant Replay, is not affected.
+Background recording is already off by default in Windows. Launcher:
+`3. General Configuration\FSO and Game Bar\Disable Game Capture Only.cmd`.
+
+**Measure:** with a game running, check `Get-Process GameBarPresenceWriter` and the
+process count from `Measure-AtlasPerformance`. Run PresentMon too, to confirm the frame
+time does not get worse.

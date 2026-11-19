@@ -930,12 +930,12 @@
     {
       "name": "FSOGameBar",
       "group": "General",
-      "description": "Fullscreen Optimizations (FSO) and Game Bar / Game DVR support. Machine changes run as TrustedInstaller; current-user changes run in the caller's session.",
+      "description": "Fullscreen Optimizations (FSO) and Game Bar / Game DVR support. Machine changes run as TrustedInstaller; current-user changes run in the caller's session. exelight7: DisableCapture keeps FSO and Game Bar but turns off Game Bar game capture and the Xbox presence writer.",
       "elevation": "TrustedInstaller",
       "noStateRecord": false,
       "menu": false,
       "launcher": null,
-      "warning": "Changes the Game Bar and Game DVR services and packages. While disabled, Game Bar shortcuts, game recording and fullscreen optimizations are unavailable.",
+      "warning": "Changes the Game Bar and Game DVR services and packages. While disabled, Game Bar shortcuts, game recording and fullscreen optimizations are unavailable. With game capture only disabled, Game Bar recording and screenshots and Xbox presence are unavailable; Game Bar widgets, FSO and other recording software keep working.",
       "states": [
         {
           "name": "Disable",
@@ -956,6 +956,21 @@
           "name": "Enable",
           "stateValue": 1,
           "launcher": "3. General Configuration\\FSO and Game Bar\\Enable FSO and Game Bar Support (default).cmd",
+          "reboot": "None",
+          "work": {
+            "registry": 15,
+            "services": 0,
+            "scheduledTasks": 0,
+            "machineAction": null,
+            "userAction": "Install-AtlasGameBarPackage",
+            "action": null,
+            "user": true
+          }
+        },
+        {
+          "name": "DisableCapture",
+          "stateValue": 2,
+          "launcher": "3. General Configuration\\FSO and Game Bar\\Disable Game Capture Only.cmd",
           "reboot": "None",
           "work": {
             "registry": 15,
