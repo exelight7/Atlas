@@ -3141,6 +3141,48 @@
       ]
     },
     {
+      "name": "LiteServices",
+      "group": "Services",
+      "description": "exelight7 Lite services: Data Usage, the per-user Connected Devices service and the Xbox Live services.",
+      "elevation": "Admin",
+      "noStateRecord": false,
+      "menu": false,
+      "launcher": null,
+      "warning": "Sets Data Usage and the per-user Connected Devices Platform service to Manual and disables the Xbox Live services. While disabled, the Data usage page and metered-network data limits, Nearby Sharing and cross-device clipboard sync, and Xbox sign-in and cloud saves for Xbox app, Game Pass and Microsoft games are unavailable.",
+      "states": [
+        {
+          "name": "Disable",
+          "stateValue": 0,
+          "launcher": "6. Advanced Configuration\\Services\\Lite Services\\Disable Lite Services.cmd",
+          "reboot": "Recommend",
+          "work": {
+            "registry": 0,
+            "services": 5,
+            "scheduledTasks": 0,
+            "machineAction": null,
+            "userAction": null,
+            "action": null,
+            "user": false
+          }
+        },
+        {
+          "name": "Enable",
+          "stateValue": 1,
+          "launcher": "6. Advanced Configuration\\Services\\Lite Services\\Enable Lite Services (default).cmd",
+          "reboot": "Recommend",
+          "work": {
+            "registry": 0,
+            "services": 5,
+            "scheduledTasks": 0,
+            "machineAction": null,
+            "userAction": null,
+            "action": null,
+            "user": false
+          }
+        }
+      ]
+    },
+    {
       "name": "NetworkDiscovery",
       "group": "Services",
       "description": "Network Discovery services. Enable first enables SMB; network profiles and firewall discovery rules remain separate choices in Advanced sharing settings. Explorer visibility is controlled by Network Navigation Pane.",

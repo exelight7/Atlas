@@ -13,6 +13,7 @@
 $script:AtlasServiceDefaultResetStates = [ordered]@{
     Bluetooth                        = 'Enable'
     LanmanWorkstation                = 'Enable'
+    LiteServices                     = 'Enable'
     NetworkDiscovery                 = 'Enable'
     NVidiaDisplayContainer           = 'Enable'
     NVidiaDisplayContainerContextMenu = 'Disable'

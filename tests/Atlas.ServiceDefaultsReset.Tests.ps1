@@ -38,6 +38,7 @@ Describe 'Invoke-AtlasServiceDefaultsReset' {
         $script:applied | Should -Be @(
             'Bluetooth:Enable'
             'LanmanWorkstation:Enable'
+            'LiteServices:Enable'
             'NetworkDiscovery:Enable'
             'NVidiaDisplayContainerContextMenu:Disable'
             'Printing:Enable'
@@ -57,6 +58,6 @@ Describe 'Invoke-AtlasServiceDefaultsReset' {
         InModuleScope Atlas.Toggles { Invoke-AtlasServiceDefaultsReset }
 
         $script:applied | Should -Contain 'NVidiaDisplayContainer:Enable'
-        $script:applied.Count | Should -Be 7
+        $script:applied.Count | Should -Be 8
     }
 }

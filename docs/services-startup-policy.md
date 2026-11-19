@@ -28,6 +28,19 @@ Atlas product decision.
 | `NetBT` | [NetbiosOptions](https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-netbt-interfaces-interface-netbiosoptions) is the per-interface control (`1` enables NetBIOS, `2` disables it). Microsoft does not prescribe changing the global NetBT driver `Start` value. | Disable File Sharing, which the fresh-install Services phase applies, writes `NetbiosOptions` = `2` on every interface that has the value, reads it back, and sets the NetBT driver to Disabled (`Start=4`). Enable File Sharing writes `1` and restores system start (`Start=1`). |
 | `Telemetry` | No Microsoft documentation establishes this generic name's identity or a supported client `Start=4`. It can collide with non-inbox software. | Windows or vendor default; a change needs the VM gate. |
 
+### exelight7 opt-in: `LiteServices`
+
+The `LiteServices` toggle (Services group, off by default: Enable is the Windows
+default) is an exelight7 product decision for gaming PCs that accept these feature
+losses. Install never applies it; the service-defaults reset and Enable restore every
+value.
+
+| Entry | Disable sets | Windows default | Feature lost while disabled |
+| --- | --- | --- | --- |
+| `DusmSvc` | Manual (`3`) | Automatic (`2`) | The Data usage page and data limits on metered networks |
+| `CDPUserSvc` (per-user template) | Manual (`3`) | Automatic (`2`) | Nearby Sharing and cross-device clipboard sync. `CDPSvc` stays with the PhoneLink toggle because Night Light needs it |
+| `XblAuthManager`, `XblGameSave`, `XboxNetApiSvc` | Disabled (`4`) | Manual (`3`) | Xbox sign-in and cloud saves for the Xbox app, Game Pass and Microsoft games |
+
 Microsoft's other service tables are evidence only for their own deployment type.
 Keep that scope in every conclusion drawn from them:
 
