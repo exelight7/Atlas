@@ -1,99 +1,127 @@
-<h1 align="center">
-  <a href="https://atlasos.net" target="_blank"><img src="https://gcore.jsdelivr.net/gh/Atlas-OS/branding@main/banners/banner-v3.png" alt="Atlas" width="800"></a>
-</h1>
-  <p align="center">
-    <a href="https://github.com/Atlas-OS/Atlas/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/atlas-os/atlas?style=for-the-badge&logo=github&color=1A91FF"/></a>
-    <a href="https://github.com/Atlas-OS/Atlas/graphs/contributors"><img alt="Contributors" src="https://img.shields.io/github/contributors/atlas-os/atlas?style=for-the-badge&color=1A91FF" /></a>
-    <a href="https://github.com/Atlas-OS/Atlas/releases/latest"><img alt="Release" src="https://img.shields.io/github/release/atlas-os/atlas?style=for-the-badge&color=1A91FF" /></a>
-    <a href="https://github.com/Atlas-OS/.github/blob/main/profile/CODE_OF_CONDUCT.md"><img alt="Code of Conduct" src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg?style=for-the-badge&color=1A91FF" /></a>
-  </p>
-<p align="center">A transparent and lightweight modification to Windows, designed to optimize performance, privacy and usability.</p>
+<h1 align="center">Atlas · exelight7 edition</h1>
 
 <p align="center">
-  <a href="https://atlasos.net" target="_blank">🌐 Website</a>
-  •
-  <a href="https://docs.atlasos.net" target="_blank">📚 Documentation</a>
-  •
-  <a href="https://discord.atlasos.net" target="_blank">☎️ Discord</a>
-  •
-  <a href="https://github.com/Atlas-OS/Atlas/discussions" target="_blank">💬 Discussions</a>
+  <a href="https://github.com/exelight7/Atlas/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/exelight7/Atlas?style=for-the-badge&color=1A91FF"/></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/exelight7/Atlas?style=for-the-badge&color=1A91FF"/></a>
+  <a href="https://github.com/Atlas-OS/Atlas"><img alt="Upstream" src="https://img.shields.io/badge/upstream-Atlas--OS%2FAtlas-1A91FF?style=for-the-badge&logo=github"/></a>
 </p>
 
-## 📚 **Important Documentation**
+<p align="center">
+  A community fork of <a href="https://github.com/Atlas-OS/Atlas">AtlasOS</a> focused on <b>gaming performance</b> and a <b>lighter Windows</b>,<br>
+  without touching anything anti-cheat depends on.
+</p>
 
-- [Installation](https://docs.atlasos.net/docs/install/playbook/)
-- [Install FAQ](https://docs.atlasos.net/docs/faq/installation/#what-was-removed-from-windows)
-- [General FAQ](https://docs.atlasos.net/docs/faq/general/#security-and-atlasos)
-- [Contribution Guidelines](https://docs.atlasos.net/docs/contributing/)
-- [Branding](https://docs.atlasos.net/docs/branding/)
+<p align="center">
+  <a href="https://github.com/exelight7/Atlas/releases/latest">⬇️ Download</a>
+  •
+  <a href="#-whats-different-in-this-fork">✨ What's different</a>
+  •
+  <a href="#-installing">🚀 Install</a>
+  •
+  <a href="https://docs.atlasos.net">📚 Atlas docs</a>
+</p>
+
+> [!NOTE]
+> This is **not** the official AtlasOS. It is an independent fork that tracks upstream Atlas 0.6 and adds opt-in changes on top.
+> For the official project, go to [Atlas-OS/Atlas](https://github.com/Atlas-OS/Atlas) and [atlasos.net](https://atlasos.net).
+> Please report problems with this fork [here](https://github.com/exelight7/Atlas/issues), not to the Atlas team.
 
 ## 🤔 What is Atlas?
 
-AtlasOS, or Atlas, is an open-source Windows configuration project. It applies privacy, usability and performance settings, with [AtlasDesktop controls](https://docs.atlasos.net/docs/atlas-configuration/settings/) for changing individual choices after installation.
+Atlas is an open-source Windows configuration project. It applies privacy, usability and performance settings, and installs **AtlasDesktop** controls so you can change or revert individual choices after installation.
 
-## 🚀 Installing Atlas
+This fork keeps everything upstream Atlas 0.6 does and adds the changes below.
 
-**Atlas Manager** is the recommended way to install Atlas. It checks your PC, installs Windows and Microsoft Store updates, walks you through your choices and then installs Atlas. It can also create an Atlas ISO and an installation USB (Beta). Download `AtlasManager.exe` from the [latest release](https://github.com/Atlas-OS/Atlas/releases/latest).
+## ✨ What's different in this fork
 
-Atlas Manager is new. If it doesn't work for you, use the alternative installer, [AME Wizard](https://amelabs.net), with the Atlas package (`.apbx`) from the same release. AME Wizard calls the package a playbook.
+Every change follows the same rules:
 
-Atlas 0.6 needs a fresh installation of Windows 11 25H2 (build 26200) or 26H2 (build 26300), unless you're upgrading from Atlas 0.4.1 or 0.5.0 on a supported build. On Windows 11 24H2, Atlas Manager moves Windows to 26H2 first. See the [upgrade requirements](docs/upgrading.md).
+- **Revertible:** each change is a toggle with an `AtlasDesktop` launcher to enable it and another to restore the Windows default.
+- **Tested:** each one ships with Pester tests and passes the same lint and build checks as upstream.
+- **Measured:** nothing is added without a before/after measurement.
+- **Anti-cheat safe:** Secure Boot, TPM, test-signing, driver signature enforcement and anti-cheat services (Vanguard, EasyAntiCheat, BattlEye) are never modified.
 
-## 👀 Why Atlas?
-### 🔒 Enhanced Privacy
-Atlas disables selected Windows telemetry components and configures policies to reduce data collection. Browser and third-party application privacy settings remain separate.
+### 🎮 Gaming
 
-### 📈 Optimized Performance
-Atlas configures background activity, services and power settings. Results depend on the workload and hardware; review the [power-saving policy](docs/power-saving-policy.md) and [service startup policy](docs/services-startup-policy.md) for the intended behavior and tradeoffs.
+| Toggle | What it does | Docs |
+|---|---|---|
+| **Windowed Game Optimizations** | Turns on Windows' flip-model upgrade for DirectX 10/11 games in windowed or borderless mode, for lower latency and Auto HDR / VRR support. | [gaming-toggles.md](docs/gaming-toggles.md) |
+| **Processor Performance Preference** | Sets the CPU's energy-performance preference (EPP) to maximum performance on AC power, and keeps it when you switch power plans. | [gaming-toggles.md](docs/gaming-toggles.md) · [power-saving-policy.md](docs/power-saving-policy.md) |
+| **FSO / Game Bar: Disable Capture** | A new third state that keeps Game Bar but turns off background recording (Game DVR). | [gaming-toggles.md](docs/gaming-toggles.md) |
 
-### 🛡️ Security Features
-Atlas exposes security choices with documented [consequences](https://docs.atlasos.net/docs/atlas-configuration/security/). Review those consequences before changing a protection setting.
+### 🪶 Lighter system
 
-Some optional security features are:
+| Toggle | What it does | Docs |
+|---|---|---|
+| **Lite Tasks** | Disables 29 telemetry and maintenance scheduled tasks that upstream Atlas leaves on. Every task can be restored. | [lite-tasks.md](docs/lite-tasks.md) |
 
-- Windows Defender & SmartScreen
-- Windows Update and automatic updates
-- CPU mitigations
-- User Account Control
-- Core isolation features
+### 📊 Tooling
 
-### ✅ Increased Usability
-Atlas changes interface defaults, disables Windows advertisements and removes selected applications. AtlasDesktop includes configuration and restoration controls; restoration may require available packages and a working download source.
+- `tools/dev/Measure-AtlasPerformance.ps1` captures a JSON snapshot covering:
+  - idle CPU, memory, processes and services
+  - GPU scheduling state
+  - processor power settings
+  - CPU performance and frequency
+  - scheduled tasks that ran in the last 24 hours
 
-### 🔍 Open Source and Transparent
+  Run it before and after a change to compare the two.
 
-Atlas comes as a package whose files you can inspect before it runs. The Atlas package is a renamed **.zip** archive, with the password [`malte`](https://docs.amelabs.net/developers/getting-started/creation.html). Most of the package is PowerShell, data definitions and supporting assets.
+## 🚀 Installing
 
-Atlas Manager and AME Wizard install the same Atlas package, and the installation itself is Atlas PowerShell either way: every feature, retry and check is code included in the package, where you can read it. Atlas Manager is open source, in [`app/`](app/README.md). With AME Wizard, Atlas's AME configuration records your choices and runs the same fixed PowerShell entry points. The package's scripts run on Windows PowerShell 5.1, which is built into Windows; the build tools in this repository use PowerShell 7. See [`docs/architecture.md`](docs/architecture.md) for how an install runs, and [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) for the build and test quick start.
+> [!IMPORTANT]
+> Create a **System Restore Point** before installing or upgrading.
 
-You can also run the installer yourself, without either app. Extract the Atlas package (it is a renamed ZIP), open an elevated Windows PowerShell prompt in its `Executables` folder, and run `.\AtlasModules\Scripts\Entry\Install-Atlas.ps1 -Option defender-enable, mitigations-default, auto-updates-disable, keyboard-shortcuts`. The script checks that Windows and Microsoft Store updates are finished, copies Atlas's files to a protected directory and runs the same install plan as TrustedInstaller; see [`docs/architecture.md`](docs/architecture.md#the-atlas-front-door).
+**Requirements**
+- Windows 11 **25H2** (build 26200) or **26H2** (build 26300), freshly installed.
+- Or an existing Atlas 0.4.1 / 0.5.0 / 0.6.0 install on a supported build. See the [upgrade requirements](docs/upgrading.md).
 
-After installing, `AtlasDesktop\9. Troubleshooting\Check Atlas Health.cmd` reports what Atlas installed and which of its settings have changed since, without changing anything. The full list of toggles and install tweaks is generated into [`docs/catalog`](docs/catalog/toggles.md).
+**Steps**
+1. Download `AtlasPlaybook_v0.6.1.apbx` from the [latest release](https://github.com/exelight7/Atlas/releases/latest).
+2. Check its SHA256 against `SHA256SUMS.txt` from the same release:
+   ```powershell
+   Get-FileHash .\AtlasPlaybook_v0.6.1.apbx -Algorithm SHA256
+   ```
+3. Open the package with [AME Wizard](https://amelabs.net) and follow the steps.
+4. Open the `AtlasDesktop` folder on your desktop or Start menu. The new toggles are there next to the upstream ones.
 
-Optional Atlas Toolbox installation resolves the latest stable Toolbox release at install time. Toolbox is intentionally not pinned to an Atlas version, so a Toolbox update does not require a new Atlas release.
+After installing, `AtlasDesktop\9. Troubleshooting\Check Atlas Health.cmd` reports what Atlas installed and which settings have changed since. It changes nothing.
 
-The [binary inventory](playbook/Executables/AtlasModules/README.md) lists the executables and Windows component packages included in the Atlas package, their hashes, source repositories, licensing and known provenance limits.
+### Atlas Toolbox
 
-The Atlas package and Atlas Manager are open source under the [GPLv3 license](https://github.com/Atlas-OS/Atlas/blob/main/LICENSE). Atlas Manager starts the install through Atlas's own TrustedInstaller broker. The AME Wizard interface is not open source, but its [TrustedUninstaller backend](https://github.com/Ameliorated-LLC/trusted-uninstaller-cli), which applies the package when you use AME Wizard, is available under MIT.
+The released Atlas Toolbox (0.1.x) only supports Atlas 0.5 and refuses to start on 0.6. Two ways around it:
 
-### Windows licensing
+- Use the `AtlasDesktop` folder until Toolbox 0.2 is released.
+- Build Toolbox from the [atlas-toolbox](https://github.com/Atlas-OS/atlas-toolbox) `main` branch, which already supports Atlas 0.6.
 
-Atlas distributes configuration files and tools rather than a Windows ISO. It does not change Windows activation; users need their own Windows installation and license.
+## 🔍 Open source and transparent
 
-## Developing Atlas
+The Atlas package is a renamed **.zip** archive with the password `malte`, so you can inspect every file before it runs. Most of it is PowerShell and data definitions that run on the Windows PowerShell 5.1 built into Windows.
 
-Start with the [contributor quick start](.github/CONTRIBUTING.md), then follow the
-[build instructions](docs/building.md) and [testing guide](docs/testing.md). The
-[architecture](docs/architecture.md) describes the installer, identity boundaries and
-shared modules. The [Atlas Manager guide](app/README.md) covers the desktop app.
-Use the [publication checklist](docs/publication.md) to review source contents,
-generated artifacts and release evidence before publishing.
+- **[Architecture](docs/architecture.md):** how an install runs.
+- **[Toggle catalog](docs/catalog/toggles.md):** every toggle and install tweak, generated from the source.
+- **[Binary inventory](playbook/Executables/AtlasModules/README.md):** every bundled executable, with its hash, source and license.
 
-The [reliability verification matrix](docs/reliability-verification-matrix.md) lists
-the evidence a release needs and what is still to be verified.
+Atlas does not change Windows activation and does not distribute Windows. You need your own Windows installation and license.
 
-## 🎨 Brand kit
-Want to create your own Atlas wallpaper with some original creative designs? Visit our [Branding Kit on Docs](https://docs.atlasos.net/docs/branding/) and share your creations on our [GitHub Discussions](https://github.com/Atlas-OS/Atlas/discussions/categories/community-artwork)!
+## 🛠️ Developing
 
-## 💙 Contributors
-<a href="https://github.com/Atlas-OS/Atlas/graphs/contributors" target="_blank"><img src="https://contrib.rocks/image?repo=Atlas-OS/Atlas&columns=18" alt="Avatars of all contributors"></a>
+| Guide | Covers |
+|---|---|
+| [Contributing](.github/CONTRIBUTING.md) | Quick start for building and testing |
+| [Building](docs/building.md) | Producing the `.apbx` package |
+| [Testing](docs/testing.md) | Pester suites and CI checks |
+| [Publication checklist](docs/publication.md) | Release evidence |
+
+A new optimization in this fork needs all of the following:
+- a toggle (`Toggles/<Group>/<Name>.psd1` + `.ps1`)
+- Pester tests
+- regenerated launchers and catalog
+- a clean lint
+- a before/after measurement
+- its own commit
+
+## 📜 License and credits
+
+Licensed under [GPLv3](LICENSE), like upstream.
+
+All credit for Atlas itself goes to the [Atlas-OS team and contributors](https://github.com/Atlas-OS/Atlas/graphs/contributors). This fork only adds the changes listed above. The AtlasOS name and logo belong to the Atlas project.
